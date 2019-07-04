@@ -1,4 +1,4 @@
-package com.tectonix.domain;
+package com.tectonix.usaspending.domain;
 
 //Interesting fields
 // 0 award_id_piid

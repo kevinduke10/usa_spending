@@ -1,4 +1,4 @@
-package com.tectonix.domain;
+package com.tectonix.usaspending.domain;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

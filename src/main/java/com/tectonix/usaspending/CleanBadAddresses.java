@@ -1,7 +1,7 @@
 package com.tectonix.usaspending;
 
 import com.opencsv.CSVWriter;
-import com.tectonix.domain.MoneyLine;
+import com.tectonix.usaspending.domain.MoneyLine;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
