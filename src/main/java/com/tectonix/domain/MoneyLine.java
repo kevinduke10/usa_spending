@@ -81,8 +81,10 @@ public class MoneyLine {
     String zipWith4XtraDigits;
 
     String address;
+    Boolean isUSAddress;
 
-    public static String[] getRelevantHeaderFields = {"awardIdPiid",
+    public static String[] getRelevantHeaderFields = {
+            "awardIdPiid",
             "transactionNumber",
             "parentAwardAgencyId",
             "parentAwardAgencyName",
@@ -105,7 +107,6 @@ public class MoneyLine {
             "fundingAgencyName",
             "foreignFunding",
             "foreignFundingDescription",
-
             "recipientDUNS",
             "recipientName",
             "recipientDoingBusinessAsName",
@@ -121,8 +122,7 @@ public class MoneyLine {
             "isUSAddress"
     };
 
-
-    public MoneyLine(String[] line, String address){
+    public MoneyLine(String[] line){
         this.awardIdPiid = line[0];
         this.transactionNumber = line[2];
         this.parentAwardAgencyId = line[3];
@@ -159,7 +159,35 @@ public class MoneyLine {
         this.recipientStateName = line[46];
         this.zipWith4XtraDigits = line[47];
 
-        this.address = address;
+        this.address = aggregateAddress(line);
+        this.isUSAddress = isValidState(line[46]);
+    }
+
+    public String aggregateAddress(String[] split){
+        String queryAddress = "";
+
+        String line1 = split[42];
+        String line2 = split[43];
+        String cityName = split[44];
+        String stateName = split[46];
+        if (line1.length() > 0) {
+            queryAddress = queryAddress + line1.replace(" ", "+");
+        }
+        if (line2.length() > 0) {
+            queryAddress = queryAddress + line2.replace(" ", "+");
+        }
+
+        if (cityName != null) {
+            queryAddress = queryAddress + "+" + cityName.replace(" ", "+") + "+";
+        } else {
+            return "";
+        }
+
+        if (stateName != null) {
+            queryAddress = queryAddress + stateName;
+        }
+
+        return queryAddress;
     }
 
     public String[] toCSV(){
@@ -169,6 +197,8 @@ public class MoneyLine {
                 this.parentAwardAgencyId,
                 this.parentAwardAgencyName,
                 this.totalDollarsObligated,
+                this.baseAndExercisedOptionsValue,
+                this.currentTotalValueOfAward,
                 this.baseAndAllOptionsValue,
                 this.potentialTotalValueOfAward,
                 this.actionDate,
@@ -197,7 +227,7 @@ public class MoneyLine {
                 this.recipientStateName,
                 this.zipWith4XtraDigits,
                 this.address,
-                isValidState().toString()
+                isValidState(this.recipientStateName).toString()
         };
         return returnVal;
     }
@@ -261,8 +291,8 @@ public class MoneyLine {
             "Northern Mariana Islands"
     );
 
-    public Boolean isValidState(){
-        List<String> foundState = listOfStates.stream().filter(state -> this.recipientStateName.equalsIgnoreCase(state)).collect(Collectors.toList());
+    public Boolean isValidState(String inputVal){
+        List<String> foundState = listOfStates.stream().filter(state -> inputVal.equalsIgnoreCase(state)).collect(Collectors.toList());
         if(this.recipientStateName != null && foundState.size() > 0){
             return true;
         }else{
