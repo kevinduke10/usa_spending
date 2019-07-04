@@ -16,5 +16,7 @@ dependencies {
 
     compile 'com.opencsv:opencsv:4.1'
     compile 'org.apache.httpcomponents:httpclient:4.5.9'
+    compile 'org.locationtech.jts:jts-core:1.15.0'
+    compile 'org.json:json:20180130'
 
 }

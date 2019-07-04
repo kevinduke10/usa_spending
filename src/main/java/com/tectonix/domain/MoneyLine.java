@@ -344,4 +344,8 @@ public class MoneyLine {
             return false;
         }
     }
+
+    public String getAddress(){
+        return address;
+    }
 }
