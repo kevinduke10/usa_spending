@@ -122,6 +122,8 @@ public class MoneyLine {
             "isUSAddress"
     };
 
+    public MoneyLine(){}
+
     public MoneyLine(String[] line){
         this.awardIdPiid = line[0];
         this.transactionNumber = line[2];
@@ -230,6 +232,49 @@ public class MoneyLine {
                 isValidState(this.recipientStateName).toString()
         };
         return returnVal;
+    }
+
+    public static MoneyLine fromFilteredCSV(String[] line){
+        MoneyLine ml = new MoneyLine();
+        ml.awardIdPiid = line[0];
+        ml.transactionNumber = line[1];
+        ml.parentAwardAgencyId = line[2];
+        ml.parentAwardAgencyName = line[3];
+        ml.totalDollarsObligated = line[4];
+        ml.baseAndExercisedOptionsValue = line[5];
+        ml.currentTotalValueOfAward = line[6];
+        ml.baseAndAllOptionsValue = line[7];
+        ml.potentialTotalValueOfAward = line[8];
+        ml.actionDate = line[9];
+        ml.periodOfPerformanceStartDate = line[10];
+        ml.periodOfPerformanceCurrentEndDate = line[11];
+        ml.periodOfPerformancePotentialEndDate = line[12];
+        ml.awardingAgencyCode = line[13];
+        ml.awardingAgencyName = line[14];
+        ml.awardingSubAgencyCode = line[15];
+        ml.awardingSubAgencyName = line[16];
+        ml.awardingOfficeCode = line[17];
+        ml.awardingOfficeName = line[18];
+        ml.fundingAgencyCode = line[19];
+        ml.fundingAgencyName = line[20];
+        ml.foreignFunding = line[21];
+        ml.foreignFundingDescription = line[22];
+
+        ml.recipientDUNS = line[23];
+        ml.recipientName = line[24];
+        ml.recipientDoingBusinessAsName = line[25];
+        ml.cageCode = line[26];
+        ml.recipientParentName = line[27];
+        ml.recipientCountryName = line[28];
+        ml.recipientAddressLine1 = line[29];
+        ml.recipientAddressLine2 = line[30];
+        ml.recipientCityName = line[31];
+        ml.recipientStateName = line[32];
+        ml.zipWith4XtraDigits = line[33];
+
+        ml.address = line[34];
+        ml.isUSAddress = Boolean.valueOf(line[35]);
+        return ml;
     }
 
     private static List<String> listOfStates = Arrays.asList(
