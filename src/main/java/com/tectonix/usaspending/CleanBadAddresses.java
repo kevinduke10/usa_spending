@@ -2,19 +2,19 @@ package com.tectonix.usaspending;
 
 import com.opencsv.CSVWriter;
 import com.tectonix.usaspending.domain.MoneyLine;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+
+import java.io.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CleanBadAddresses {
 
-    static String originalFileName = "/Users/Kev/Downloads/2019_all_Contracts_Full_20190513/2019_all_Contracts_Full_20190515_2.csv";
-    static String filteredAddressFile = "/Users/Kev/Downloads/2019_all_Contracts_Full_20190513/2019_all_Contracts_Full_20190515_2_filtered.csv";
+    static String originalFileName = "/Users/Kev/Downloads/2019_all_Contracts_Full_20190610/2019_all_Contracts_Full_20190613_3.csv";
 
     public static void main(String[] args) throws IOException {
+        File filteredAddressFile = new File("/Users/Kev/Downloads/2019_all_Contracts_Full_20190610/2019_all_Contracts_Full_20190613_3_filtered.csv");
+        filteredAddressFile.createNewFile();
+
         CSVWriter writer = new CSVWriter(new FileWriter(filteredAddressFile), CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER);
 
         int indexNum = 0;
@@ -30,7 +30,6 @@ public class CleanBadAddresses {
 
                     if (split.length == 261) {
                         MoneyLine ml = new MoneyLine(split);
-
                         writer.writeNext(ml.toCSV());
                     } else {
                         badVals++;

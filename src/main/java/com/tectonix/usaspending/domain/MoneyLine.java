@@ -44,6 +44,8 @@ import java.util.stream.Collectors;
 
 public class MoneyLine {
 
+    int indexNum;
+
     String awardIdPiid;
     String transactionNumber;
     String parentAwardAgencyId;
@@ -122,9 +124,10 @@ public class MoneyLine {
             "isUSAddress"
     };
 
-    public MoneyLine(){}
+    public MoneyLine() {
+    }
 
-    public MoneyLine(String[] line){
+    public MoneyLine(String[] line) {
         this.awardIdPiid = line[0];
         this.transactionNumber = line[2];
         this.parentAwardAgencyId = line[3];
@@ -165,7 +168,7 @@ public class MoneyLine {
         this.isUSAddress = isValidState(line[46]);
     }
 
-    public String aggregateAddress(String[] split){
+    public String aggregateAddress(String[] split) {
         String queryAddress = "";
 
         String line1 = split[42];
@@ -192,7 +195,7 @@ public class MoneyLine {
         return queryAddress;
     }
 
-    public String[] toCSV(){
+    public String[] toCSV() {
         String[] returnVal = {
                 this.awardIdPiid,
                 this.transactionNumber,
@@ -234,7 +237,7 @@ public class MoneyLine {
         return returnVal;
     }
 
-    public static MoneyLine fromFilteredCSV(String[] line){
+    public static MoneyLine fromFilteredCSV(String[] line) {
         MoneyLine ml = new MoneyLine();
         ml.awardIdPiid = line[0];
         ml.transactionNumber = line[1];
@@ -336,16 +339,32 @@ public class MoneyLine {
             "Northern Mariana Islands"
     );
 
-    public Boolean isValidState(String inputVal){
+    public Boolean isValidState(String inputVal) {
         List<String> foundState = listOfStates.stream().filter(state -> inputVal.equalsIgnoreCase(state)).collect(Collectors.toList());
-        if(this.recipientStateName != null && foundState.size() > 0){
+        if (this.recipientStateName != null && foundState.size() > 0) {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
 
-    public String getAddress(){
+    public String getAddress() {
         return address;
+    }
+
+    public String getCencusQueryString(){
+        return address;
+    }
+
+    public String getPeliasQueryString(){
+        return address + "";
+    }
+
+    public int getIndexNum() {
+        return indexNum;
+    }
+
+    public void setIndexNum(int indexNum) {
+        this.indexNum = indexNum;
     }
 }
