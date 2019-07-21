@@ -197,7 +197,7 @@ public class GeoencodeAddresses {
                     address.getResultAddress().replace(",", " ")
             };
             csvWriter.writeNext(writeMe);
-            csvWriter.flush();
+            //csvWriter.flush();
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -207,7 +207,7 @@ public class GeoencodeAddresses {
         try {
             String[] emptyLine = {String.valueOf(indexNum)};
             csvWriter.writeNext(emptyLine);
-            csvWriter.flush();
+            //csvWriter.flush();
         }catch (Exception e){
             e.printStackTrace();
         }
