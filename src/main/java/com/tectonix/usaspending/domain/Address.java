@@ -20,12 +20,14 @@ public class Address {
     }
 
     public static Address fromCensusResponse(String inputAddress, String response, int indexNum){
-        if(!response.startsWith("{")){
-            //System.out.println("Failed with res = " + response);
-            return new Address(inputAddress, new Coordinate(0D,0D), "FAILED",indexNum, "CENSUS");
-        }
-        JSONObject lookup = new JSONObject(response);
+
         try {
+            if(!response.startsWith("{")){
+                return null;
+                //return new Address(inputAddress, new Coordinate(0D,0D), "FAILED",indexNum, "CENSUS");
+            }
+            JSONObject lookup = new JSONObject(response);
+
             if (lookup.has("result")) {
                 JSONObject result = lookup.getJSONObject("result");
                 if (result.has("addressMatches")) {
@@ -38,19 +40,20 @@ public class Address {
                             return new Address(inputAddress, matchedCoord, address.get("matchedAddress").toString(),indexNum,"CENSUS");
                         }
                     }else{
-                        return new Address(inputAddress, new Coordinate(0D,0D), "FAILED",indexNum, "CENSUS");
+                        return null;
                     }
                 }
             }
+            return null;
         }catch (Exception e){
-            return new Address(inputAddress, new Coordinate(0D,0D), "FAILED",indexNum, "CENSUS");
+            return null;
         }
-        return new Address(inputAddress, new Coordinate(0D,0D), "FAILED",indexNum, "CENSUS");
     }
 
     public static Address fromPeliasResponse(String inputAddress, String response, int indexNum){
-        JSONObject lookup = new JSONObject(response);
         try {
+            JSONObject lookup = new JSONObject(response);
+
             if (lookup.has("features")) {
                 JSONArray result = lookup.getJSONArray("features");
                 if(result != null && result.length() > 0){
@@ -62,15 +65,14 @@ public class Address {
 
                     return new Address(inputAddress, new Coordinate(coords.getDouble(1),coords.getDouble(0)), resultAddress.replace(","," "),indexNum, "PELIAS");
                 }else{
-                    return new Address(inputAddress, new Coordinate(0D,0D), "FAILED",indexNum, "PELIAS");
+                    return null;
                 }
 
             }
+            return null;
         }catch (Exception e){
-            return new Address(inputAddress, new Coordinate(0D,0D), "FAILED",indexNum, "PELIAS");
+            return null;
         }
-        return new Address(inputAddress, new Coordinate(0D,0D), "FAILED",indexNum, "PELIAS");
-
     }
 
     public String getInputAddress() {

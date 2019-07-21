@@ -13,7 +13,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-
 import static java.util.stream.Collectors.toList;
 
 public class GeoencodeAddresses {
@@ -103,7 +102,7 @@ public class GeoencodeAddresses {
                     }
 
                     indexNum++;
-                    if(indexNum % 100 == 0){
+                    if(indexNum % 500 == 0){
                         System.out.println("Processed row = " + indexNum);
                         System.out.println(sw.getTimeString());
                     }
@@ -195,7 +194,7 @@ public class GeoencodeAddresses {
             String[] writeMe = {String.valueOf(address.getIndexNum()),
                     address.getInputAddress(),
                     address.getCoordinate().x + "\\" + address.getCoordinate().y,
-                    address.getResultAddress()
+                    address.getResultAddress().replace(",", " ")
             };
             csvWriter.writeNext(writeMe);
             csvWriter.flush();
