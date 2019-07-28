@@ -4,48 +4,61 @@ import com.opencsv.CSVWriter;
 import com.tectonix.usaspending.domain.MoneyLine;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CleanBadAddresses {
 
-    static String originalFileName = "/Users/Kev/Downloads/2019_all_Contracts_Full_20190610/2019_all_Contracts_Full_20190613_3.csv";
+    static String dataDir = "/Users/Kev/Tectonix/data/spend/";
 
     public static void main(String[] args) throws IOException {
-        File filteredAddressFile = new File("/Users/Kev/Downloads/2019_all_Contracts_Full_20190610/2019_all_Contracts_Full_20190613_3_filtered.csv");
-        filteredAddressFile.createNewFile();
 
-        CSVWriter writer = new CSVWriter(new FileWriter(filteredAddressFile), CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER);
+        List<File> csvsToProcess = getAllCSVs(dataDir);
+        File filteredFileDirectory = new File(dataDir + "filtered");
+        filteredFileDirectory.mkdir();
 
-        int indexNum = 0;
+        csvsToProcess.forEach(csvFile -> {
+            try {
+                File filteredAddressFile = new File(dataDir + "filtered/ " + csvFile.getName());
+                filteredAddressFile.createNewFile();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(originalFileName))) {
-            String line;
-            int badVals = 0;
-            while ((line = br.readLine()) != null) {
+                CSVWriter writer = new CSVWriter(new FileWriter(filteredAddressFile), CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER);
 
-                if (indexNum != 0) {
-                    String lineWithoutExtraCommas = removeExtraCommas(line);
-                    String[] split = lineWithoutExtraCommas.split(",");
+                int indexNum = 0;
 
-                    if (split.length == 261) {
-                        MoneyLine ml = new MoneyLine(split);
-                        writer.writeNext(ml.toCSV());
-                    } else {
-                        badVals++;
+                try (BufferedReader br = new BufferedReader(new FileReader(csvFile.getAbsoluteFile()))) {
+                    String line;
+                    int badVals = 0;
+                    while ((line = br.readLine()) != null) {
+
+                        if (indexNum != 0) {
+                            String lineWithoutExtraCommas = removeExtraCommas(line);
+                            String[] split = lineWithoutExtraCommas.split(",");
+
+                            if (split.length == 261) {
+                                MoneyLine ml = new MoneyLine(split);
+                                writer.writeNext(ml.toCSV());
+                            } else {
+                                badVals++;
+                            }
+                        } else {
+                            writer.writeNext(MoneyLine.getRelevantHeaderFields);
+                        }
+
+                        indexNum++;
                     }
-                } else {
-                    writer.writeNext(MoneyLine.getRelevantHeaderFields);
+                    System.out.println("Quality Addresses = " + indexNum);
+                    System.out.println("Bad Addresses = " + badVals);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-
-                indexNum++;
+                writer.close();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            System.out.println("Quality Addresses = " + indexNum);
-            System.out.println("Bad Addresses = " + badVals);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        writer.close();
+        });
     }
 
     private static String removeExtraCommas(String line) {
@@ -61,6 +74,27 @@ public class CleanBadAddresses {
         } catch (Exception e) {
             return "";
         }
+    }
+
+    private static List<File> getAllCSVs(String dataLocation) {
+
+        List<File> csvFiles = new ArrayList<>();
+
+        File dataDirectory = new File(dataLocation);
+
+        if (dataDirectory.isDirectory()) {
+            File[] children = dataDirectory.listFiles();
+            for (int i = 0; i < children.length; i++) {
+                if (children[i].getAbsolutePath().endsWith(".csv")) {
+                    csvFiles.add(children[i]);
+                }
+            }
+        } else if (dataDirectory.getAbsolutePath().endsWith(".csv")) {
+            csvFiles.add(dataDirectory);
+        }
+
+        return csvFiles;
+
     }
 }
 
