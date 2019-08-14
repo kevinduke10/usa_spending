@@ -1,4 +1,4 @@
-package com.tectonix.usaspending;
+package com.tectonix.usaspending.services;
 
 import com.opencsv.CSVWriter;
 import com.tectonix.usaspending.domain.Address;
@@ -9,20 +9,26 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.locationtech.jts.util.Stopwatch;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import static java.util.stream.Collectors.toList;
 
+@Service
 public class GeoencodeAddresses {
 
     static String whichCSV = "1";
 
+    @Value("${dataDir}")
+    String dataDir;
+
     //This geocoder fails for many addresses outside (even inside) the US.
     // We'll spin up our own and make available.
     // Cost to use google geoencode API on 2 MIL requests == $2000
-    static String geoCoder = "PELIAS";
     static String censusGeoEncodingURLBase = "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=";
     static String peliasGeoEncodingURLBase = "http://localhost:4000/v1/search?text=";
 
@@ -37,7 +43,7 @@ public class GeoencodeAddresses {
     static CloseableHttpClient client = HttpClients.createDefault();
     static File outFile = new File(outFileString);
 
-    public static void main(String[] args){
+    public void encode(){
 
         int resumeFromMax = 0;
         int badVals = 0;

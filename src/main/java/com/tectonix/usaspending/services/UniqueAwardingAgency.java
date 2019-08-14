@@ -1,6 +1,9 @@
-package com.tectonix.usaspending;
+package com.tectonix.usaspending.services;
 
 import com.opencsv.CSVWriter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -8,14 +11,16 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class UniqueAwardingAgency {
 
-    static String filteredDataLocation = "/Users/Kev/Tectonix/data/spend/filtered/";
+    @Value("${dataDir}")
+    String dataDir;
 
-    public static void main(String[] args) {
+    public void createUniqueCSV(){
 
         List<String> uniqueAwardingAgencies = new ArrayList<>();
-        File filteredDataDir = new File(filteredDataLocation);
+        File filteredDataDir = new File(dataDir + "filtered");
         File[] filteredFiles = filteredDataDir.listFiles();
         for(int i = 0; i < filteredFiles.length; i++){
             File filteredFile = filteredFiles[i];
@@ -53,7 +58,9 @@ public class UniqueAwardingAgency {
         }
 
         try {
-            File uniqueSubAgencyFile = new File(filteredDataLocation + "uniqueagency.csv");
+            File uniqueDir = new File(dataDir + "/unique/");
+            uniqueDir.mkdir();
+            File uniqueSubAgencyFile = new File(uniqueDir.getAbsolutePath() + "/uniqueagency.csv");
             FileWriter outWriter = new FileWriter(uniqueSubAgencyFile, false);
             CSVWriter csvWriter = new CSVWriter(outWriter, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER);
 

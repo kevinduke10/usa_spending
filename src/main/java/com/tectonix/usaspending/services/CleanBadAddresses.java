@@ -1,7 +1,9 @@
-package com.tectonix.usaspending;
+package com.tectonix.usaspending.services;
 
 import com.opencsv.CSVWriter;
 import com.tectonix.usaspending.domain.MoneyLine;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -9,12 +11,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Service
 public class CleanBadAddresses {
 
-    static String dataDir = "/Users/Kev/Tectonix/data/spend/";
+    @Value("${dataDir}")
+    String dataDir;
 
-    public static void main(String[] args) throws IOException {
-
+    public void clean(){
         List<File> csvsToProcess = getAllCSVs(dataDir);
         File filteredFileDirectory = new File(dataDir + "filtered");
         filteredFileDirectory.mkdir();
