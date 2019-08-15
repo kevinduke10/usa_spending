@@ -3,6 +3,7 @@ package com.tectonix.usaspending.services;
 import com.opencsv.CSVWriter;
 import com.tectonix.usaspending.domain.Address;
 import com.tectonix.usaspending.domain.MoneyLine;
+import com.tectonix.usaspending.utils.SpendingUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -21,8 +22,6 @@ import static java.util.stream.Collectors.toList;
 @Service
 public class GeoencodeAddresses {
 
-    static String whichCSV = "1";
-
     @Value("${dataDir}")
     String dataDir;
 
@@ -38,105 +37,112 @@ public class GeoencodeAddresses {
     static boolean runAsync = true;
     static int asyncBatchSize = 10;
 
-    static String filteredAddressFile = "/Users/Kev/Tectonix/data/usa_spending/2019_all_Contracts_Full_20190613_" + whichCSV + "_filtered.csv";
-    static String outFileString = "/Users/Kev/Tectonix/data/usa_spending/index_address_file" + whichCSV + ".csv";
     static CloseableHttpClient client = HttpClients.createDefault();
-    static File outFile = new File(outFileString);
 
     public void encode(){
 
-        int resumeFromMax = 0;
-        int badVals = 0;
-        Stopwatch sw = new Stopwatch();
+        List<File> csvsToProcess = SpendingUtils.getAllCSVs(dataDir + "/filtered/");
 
-        try {
-            if(outFile.exists()){
-                FileReader indexReader = new FileReader(outFile);
-                try (BufferedReader br = new BufferedReader(indexReader)) {
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        if(line.split(",").length > 0 && !line.split(",")[0].equals("indexNum")){
-                            if(Integer.parseInt(line.split(",")[0]) > resumeFromMax){
-                                resumeFromMax = Integer.parseInt(line.split(",")[0]);
+        File indexFileDir = new File(dataDir + "/encoded/");
+        indexFileDir.mkdir();
+
+        csvsToProcess.forEach(filteredCsvFile -> {
+            int resumeFromMax = 0;
+            int badVals = 0;
+            Stopwatch sw = new Stopwatch();
+
+            try {
+                File encodedIndexFile = new File(indexFileDir + "/" + filteredCsvFile.getName());
+
+                if(encodedIndexFile.exists()){
+                    FileReader indexReader = new FileReader(encodedIndexFile);
+                    try (BufferedReader br = new BufferedReader(indexReader)) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            if(line.split(",").length > 0 && !line.split(",")[0].equals("indexNum")){
+                                if(Integer.parseInt(line.split(",")[0]) > resumeFromMax){
+                                    resumeFromMax = Integer.parseInt(line.split(",")[0]);
+                                }
                             }
                         }
+                    }catch (Exception e){
+                        e.printStackTrace();
+                        indexReader.close();
                     }
-                }catch (Exception e){
-                    e.printStackTrace();
                     indexReader.close();
                 }
-                indexReader.close();
-            }
 
-            FileWriter outWriter = new FileWriter(outFile,true);
-            CSVWriter csvWriter = new CSVWriter(outWriter, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER);
+                FileWriter outWriter = new FileWriter(encodedIndexFile,true);
+                CSVWriter csvWriter = new CSVWriter(outWriter, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER);
 
-            String[] headerLine = {"indexNum", "inputAddress", "coordinate", "resultAddress"};
-            int indexNum = 0;
+                String[] headerLine = {"indexNum", "inputAddress", "coordinate", "resultAddress"};
+                int indexNum = 0;
 
-            sw.start();
+                sw.start();
 
-            try (BufferedReader br = new BufferedReader(new FileReader(filteredAddressFile))) {
+                try (BufferedReader br = new BufferedReader(new FileReader(filteredCsvFile))) {
 
-                List<MoneyLine> moneyLineBatch = new ArrayList<>();
+                    List<MoneyLine> moneyLineBatch = new ArrayList<>();
 
-                String line;
-                while ((line = br.readLine()) != null) {
-                    if (indexNum < resumeFromMax) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        if (indexNum < resumeFromMax) {
+                            indexNum++;
+                            continue;
+                        }
+
+                        if(runAsync && moneyLineBatch.size() > asyncBatchSize){
+
+                            List<CompletableFuture<Address>> futureList = moneyLineBatch.stream()
+                                    .map(ml -> CompletableFuture.supplyAsync(() -> addressLookup(client, ml, csvWriter)))
+                                    .collect(toList());
+
+                            CompletableFuture.allOf(CompletableFuture.allOf(futureList.toArray(new CompletableFuture[0]))).join();
+
+                            moneyLineBatch.clear();
+                        }
+
+                        if (indexNum != 0) {
+                            MoneyLine ml = MoneyLine.fromFilteredCSV(line.split(","));
+                            ml.setIndexNum(indexNum);
+                            moneyLineBatch.add(ml);
+                        } else {
+                            csvWriter.writeNext(headerLine);
+                            csvWriter.flush();
+                        }
+
                         indexNum++;
-                        continue;
+                        if(indexNum % 500 == 0){
+                            System.out.println("Processed row = " + indexNum);
+                            System.out.println(sw.getTimeString());
+                        }
                     }
-
-                    if(runAsync && moneyLineBatch.size() > asyncBatchSize){
-
-                        List<CompletableFuture<Address>> futureList = moneyLineBatch.stream()
-                                .map(ml -> CompletableFuture.supplyAsync(() -> addressLookup(client, ml, csvWriter)))
-                                .collect(toList());
-
-                        CompletableFuture.allOf(CompletableFuture.allOf(futureList.toArray(new CompletableFuture[0]))).join();
-
-                        moneyLineBatch.clear();
-                    }
-
-                    if (indexNum != 0) {
-                        MoneyLine ml = MoneyLine.fromFilteredCSV(line.split(","));
-                        ml.setIndexNum(indexNum);
-                        moneyLineBatch.add(ml);
-                    } else {
-                        csvWriter.writeNext(headerLine);
-                        csvWriter.flush();
-                    }
-
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    String[] emptyLine = {String.valueOf(indexNum)};
+                    csvWriter.writeNext(emptyLine);
+                    csvWriter.flush();
                     indexNum++;
-                    if(indexNum % 500 == 0){
-                        System.out.println("Processed row = " + indexNum);
-                        System.out.println(sw.getTimeString());
-                    }
+                    badVals++;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                String[] emptyLine = {String.valueOf(indexNum)};
-                csvWriter.writeNext(emptyLine);
-                csvWriter.flush();
-                indexNum++;
-                badVals++;
-            }
-            csvWriter.close();
-            outWriter.close();
-            client.close();
-            System.out.println("DONE");
+                csvWriter.close();
+                outWriter.close();
+                client.close();
+                System.out.println("DONE");
 
-        }catch(Exception e){
-            e.printStackTrace();
-        }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+
+        });
     }
 
     public static Address addressLookup(CloseableHttpClient client, MoneyLine ml, CSVWriter writer){
         try {
             Address address = censusAddressLookup(client,ml);
-            if(address == null){
-                address = peliasAddressLookup(client,ml);
-            }
+//            if(address == null){
+//                address = peliasAddressLookup(client,ml);
+//            }
 
             if(address != null){
                 writeResult(address,writer);

@@ -2,6 +2,7 @@ package com.tectonix.usaspending.services;
 
 import com.opencsv.CSVWriter;
 import com.tectonix.usaspending.domain.MoneyLine;
+import com.tectonix.usaspending.utils.SpendingUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,7 @@ public class CleanBadAddresses {
     String dataDir;
 
     public void clean(){
-        List<File> csvsToProcess = getAllCSVs(dataDir);
+        List<File> csvsToProcess = SpendingUtils.getAllCSVs(dataDir);
         File filteredFileDirectory = new File(dataDir + "filtered");
         filteredFileDirectory.mkdir();
 
@@ -77,27 +78,6 @@ public class CleanBadAddresses {
         } catch (Exception e) {
             return "";
         }
-    }
-
-    private static List<File> getAllCSVs(String dataLocation) {
-
-        List<File> csvFiles = new ArrayList<>();
-
-        File dataDirectory = new File(dataLocation);
-
-        if (dataDirectory.isDirectory()) {
-            File[] children = dataDirectory.listFiles();
-            for (int i = 0; i < children.length; i++) {
-                if (children[i].getAbsolutePath().endsWith(".csv")) {
-                    csvFiles.add(children[i]);
-                }
-            }
-        } else if (dataDirectory.getAbsolutePath().endsWith(".csv")) {
-            csvFiles.add(dataDirectory);
-        }
-
-        return csvFiles;
-
     }
 }
 
