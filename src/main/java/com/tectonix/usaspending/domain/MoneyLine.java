@@ -128,6 +128,16 @@ public class MoneyLine {
     }
 
     public MoneyLine(String[] line) {
+        if(line.length == 262) {
+            String[] newLine = new String[line.length - 1];
+            for (int i = 0; i < newLine.length; i++) {
+                if (i != 0) {
+                    newLine[i - 1] = line[i];
+                }
+            }
+            line = newLine;
+        }
+
         this.awardIdPiid = line[0];
         this.transactionNumber = line[2];
         this.parentAwardAgencyId = line[3];

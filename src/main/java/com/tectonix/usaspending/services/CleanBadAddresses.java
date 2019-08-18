@@ -41,7 +41,7 @@ public class CleanBadAddresses {
                             String lineWithoutExtraCommas = removeExtraCommas(line);
                             String[] split = lineWithoutExtraCommas.split(",");
 
-                            if (split.length == 261) {
+                            if (split.length == 261 || split.length == 262) {
                                 MoneyLine ml = new MoneyLine(split);
                                 writer.writeNext(ml.toCSV());
                             } else {

@@ -17,6 +17,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static java.util.stream.Collectors.toList;
 
 @Service
@@ -76,7 +78,7 @@ public class GeoencodeAddresses {
                 CSVWriter csvWriter = new CSVWriter(outWriter, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER);
 
                 String[] headerLine = {"indexNum", "inputAddress", "coordinate", "resultAddress"};
-                int indexNum = 0;
+                AtomicInteger indexNum = new AtomicInteger(0);
 
                 sw.start();
 
@@ -86,12 +88,12 @@ public class GeoencodeAddresses {
 
                     String line;
                     while ((line = br.readLine()) != null) {
-                        if (indexNum < resumeFromMax) {
-                            indexNum++;
+                        if (indexNum.get() < resumeFromMax) {
+                            indexNum.getAndIncrement();
                             continue;
                         }
 
-                        if(runAsync && moneyLineBatch.size() > asyncBatchSize){
+                        if(runAsync && moneyLineBatch.size() >= asyncBatchSize){
 
                             List<CompletableFuture<Address>> futureList = moneyLineBatch.stream()
                                     .map(ml -> CompletableFuture.supplyAsync(() -> addressLookup(client, ml, csvWriter)))
@@ -102,17 +104,17 @@ public class GeoencodeAddresses {
                             moneyLineBatch.clear();
                         }
 
-                        if (indexNum != 0) {
+                        if (indexNum.get() != 0) {
                             MoneyLine ml = MoneyLine.fromFilteredCSV(line.split(","));
-                            ml.setIndexNum(indexNum);
+                            ml.setIndexNum(indexNum.get());
                             moneyLineBatch.add(ml);
                         } else {
                             csvWriter.writeNext(headerLine);
                             csvWriter.flush();
                         }
 
-                        indexNum++;
-                        if(indexNum % 500 == 0){
+                        indexNum.getAndIncrement();
+                        if(indexNum.get() % 500 == 0){
                             System.out.println("Processed row = " + indexNum);
                             System.out.println(sw.getTimeString());
                         }
@@ -122,7 +124,7 @@ public class GeoencodeAddresses {
                     String[] emptyLine = {String.valueOf(indexNum)};
                     csvWriter.writeNext(emptyLine);
                     csvWriter.flush();
-                    indexNum++;
+                    indexNum.getAndIncrement();
                     badVals++;
                 }
                 csvWriter.close();
@@ -140,9 +142,9 @@ public class GeoencodeAddresses {
     public static Address addressLookup(CloseableHttpClient client, MoneyLine ml, CSVWriter writer){
         try {
             Address address = censusAddressLookup(client,ml);
-//            if(address == null){
-//                address = peliasAddressLookup(client,ml);
-//            }
+            if(address == null){
+                //address = peliasAddressLookup(client,ml);
+            }
 
             if(address != null){
                 writeResult(address,writer);
