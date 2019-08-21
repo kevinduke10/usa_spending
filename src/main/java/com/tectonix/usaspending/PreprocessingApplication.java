@@ -40,6 +40,9 @@ public class PreprocessingApplication implements CommandLineRunner {
             case "AWARDS":
                 uniqueAwardingService.createUniqueCSV();
                 break;
+            case "SENDERS":
+                uniqueAwardingService.lookupSenders();
+                break;
             default:
                 System.out.println("Invalid arg passed for processing. CLEAN/GEOENCODE/AWARDS");
                 System.exit(1);
