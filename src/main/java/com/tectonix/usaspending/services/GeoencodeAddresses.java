@@ -77,7 +77,7 @@ public class GeoencodeAddresses {
                 FileWriter outWriter = new FileWriter(encodedIndexFile,true);
                 CSVWriter csvWriter = new CSVWriter(outWriter, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER);
 
-                String[] headerLine = {"indexNum", "inputAddress", "coordinate", "resultAddress"};
+                String[] headerLine = {"indexNum", "inputAddress", "coordinate", "resultAddress","tectonixUUID"};
                 AtomicInteger indexNum = new AtomicInteger(0);
 
                 sw.start();
@@ -106,7 +106,7 @@ public class GeoencodeAddresses {
 
                         if (indexNum.get() != 0) {
                             MoneyLine ml = MoneyLine.fromFilteredCSV(line.split(","));
-                            ml.setIndexNum(indexNum.get());
+                            ml.setIndex(indexNum.get());
                             moneyLineBatch.add(ml);
                         } else {
                             csvWriter.writeNext(headerLine);
@@ -150,10 +150,10 @@ public class GeoencodeAddresses {
                 writeResult(address,writer);
                 return address;
             }else{
-                writeEmpty(writer,ml.getIndexNum());
+                writeEmpty(writer,ml.getTectonixUUID(),ml.getIndex());
             }
         }catch (Exception e){
-            writeEmpty(writer,ml.getIndexNum());
+            writeEmpty(writer,ml.getTectonixUUID(),ml.getIndex());
         }
         return null;
     }
@@ -171,7 +171,7 @@ public class GeoencodeAddresses {
             geoQuery.addHeader("accept-encoding", "gzip, deflate");
             CloseableHttpResponse response = client.execute(geoQuery);
             String responseString = EntityUtils.toString(response.getEntity());
-            Address resultAddress = Address.fromCensusResponse(ml.getAddress(), responseString, ml.getIndexNum());
+            Address resultAddress = Address.fromCensusResponse(ml.getAddress(), responseString, ml.getTectonixUUID(),ml.getIndex());
             response.close();
 
             //System.out.println(sw.getTimeString());
@@ -193,7 +193,7 @@ public class GeoencodeAddresses {
 
             CloseableHttpResponse response = client.execute(geoQuery);
             String responseString = EntityUtils.toString(response.getEntity());
-            Address resultAddress = Address.fromPeliasResponse(ml.getAddress(), responseString,ml.getIndexNum());
+            Address resultAddress = Address.fromPeliasResponse(ml.getAddress(), responseString,ml.getTectonixUUID(),ml.getIndex());
             response.close();
             //System.out.println(sw.getTimeString());
             return resultAddress;
@@ -205,10 +205,11 @@ public class GeoencodeAddresses {
 
     public static void writeResult(Address address, CSVWriter csvWriter){
         try {
-            String[] writeMe = {String.valueOf(address.getIndexNum()),
+            String[] writeMe = {String.valueOf(address.getIndex()),
                     address.getInputAddress(),
                     address.getCoordinate().x + "\\" + address.getCoordinate().y,
-                    address.getResultAddress().replace(",", " ")
+                    address.getResultAddress().replace(",", " "),
+                    address.getTectonixUUID()
             };
             csvWriter.writeNext(writeMe);
             //csvWriter.flush();
@@ -217,9 +218,9 @@ public class GeoencodeAddresses {
         }
     }
 
-    public static void writeEmpty(CSVWriter csvWriter,Integer indexNum){
+    public static void writeEmpty(CSVWriter csvWriter,String tectonixUUID,Integer idx){
         try {
-            String[] emptyLine = {String.valueOf(indexNum)};
+            String[] emptyLine = {String.valueOf(idx),String.valueOf(tectonixUUID)};
             csvWriter.writeNext(emptyLine);
             //csvWriter.flush();
         }catch (Exception e){

@@ -2,6 +2,7 @@ package com.tectonix.usaspending;
 
 import com.tectonix.usaspending.services.CleanBadAddresses;
 import com.tectonix.usaspending.services.GeoencodeAddresses;
+import com.tectonix.usaspending.services.TectonixIngest;
 import com.tectonix.usaspending.services.UniqueAwardingAgency;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -20,6 +21,9 @@ public class PreprocessingApplication implements CommandLineRunner {
     @Autowired
     UniqueAwardingAgency uniqueAwardingService;
 
+    @Autowired
+    TectonixIngest tectonixIngest;
+
     public static void main(String[] args) {
         SpringApplication.run(PreprocessingApplication.class, args);
     }
@@ -27,7 +31,7 @@ public class PreprocessingApplication implements CommandLineRunner {
     @Override
     public void run(String... args){
         if(args.length == 0){
-            System.out.println("Please provide a service to run (CLEAN/GEOENCODE/AWARDS)");
+            System.out.println("Please provide a service to run (CLEAN/GEOENCODE/AWARDS/SENDERS/INGEST)");
             System.exit(1);
         }
         switch(args[0].toUpperCase()){
@@ -43,8 +47,11 @@ public class PreprocessingApplication implements CommandLineRunner {
             case "SENDERS":
                 uniqueAwardingService.lookupSenders();
                 break;
+            case "INGEST":
+                tectonixIngest.ingest();
+                break;
             default:
-                System.out.println("Invalid arg passed for processing. CLEAN/GEOENCODE/AWARDS");
+                System.out.println("Invalid arg passed for processing. CLEAN/GEOENCODE/AWARDS/SENDERS/INGEST");
                 System.exit(1);
         }
     }

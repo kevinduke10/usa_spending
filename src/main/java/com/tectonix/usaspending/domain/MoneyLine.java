@@ -40,12 +40,10 @@ package com.tectonix.usaspending.domain;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class MoneyLine {
-
-    int indexNum;
-
     String awardIdPiid;
     String transactionNumber;
     String parentAwardAgencyId;
@@ -84,6 +82,9 @@ public class MoneyLine {
 
     String address;
     Boolean isUSAddress;
+
+    String tectonixUUID;
+    Integer index;
 
     public static String[] getRelevantHeaderFields = {
             "awardIdPiid",
@@ -128,6 +129,9 @@ public class MoneyLine {
     }
 
     public MoneyLine(String[] line) {
+        //They of course changed their data format so the new correct line length is 262 so well remove the unique id they
+        //added in the first column.
+
         if(line.length == 262) {
             String[] newLine = new String[line.length - 1];
             for (int i = 0; i < newLine.length; i++) {
@@ -176,6 +180,7 @@ public class MoneyLine {
 
         this.address = aggregateAddress(line);
         this.isUSAddress = isValidState(line[46]);
+        this.tectonixUUID = UUID.randomUUID().toString();
     }
 
     public String aggregateAddress(String[] split) {
@@ -242,7 +247,8 @@ public class MoneyLine {
                 this.recipientStateName,
                 this.zipWith4XtraDigits,
                 this.address,
-                isValidState(this.recipientStateName).toString()
+                isValidState(this.recipientStateName).toString(),
+                this.tectonixUUID
         };
         return returnVal;
     }
@@ -287,6 +293,7 @@ public class MoneyLine {
 
         ml.address = line[34];
         ml.isUSAddress = Boolean.valueOf(line[35]);
+        ml.tectonixUUID = line[36];
         return ml;
     }
 
@@ -370,11 +377,13 @@ public class MoneyLine {
         return address + "";
     }
 
-    public int getIndexNum() {
-        return indexNum;
+    public String getTectonixUUID() {
+        return tectonixUUID;
     }
 
-    public void setIndexNum(int indexNum) {
-        this.indexNum = indexNum;
+    public Integer getIndex(){return index;}
+
+    public void setIndex(Integer idx){
+        this.index = idx;
     }
 }

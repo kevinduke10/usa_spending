@@ -1,6 +1,9 @@
 package com.tectonix.usaspending.services;
 
 import com.opencsv.CSVWriter;
+import com.tectonix.usaspending.domain.GoogleFormattedAddress;
+import com.tectonix.usaspending.domain.GoogleGeoEncodeResult;
+import com.tectonix.usaspending.domain.UniqueAgency;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -28,46 +31,6 @@ public class UniqueAwardingAgency {
     String apiKey;
 
     static CloseableHttpClient client = HttpClients.createDefault();
-
-    private class UniqueAgency{
-        String awardingAgencyName;
-        String awardingSubAgencyName;
-        String awardingOfficeName;
-
-        UniqueAgency(String awardingAgencyName, String awardingSubAgencyName, String awardingOfficeName){
-            this.awardingAgencyName = awardingAgencyName;
-            this.awardingSubAgencyName = awardingSubAgencyName;
-            this.awardingOfficeName = awardingOfficeName;
-        }
-    }
-
-    private class GoogleGeoEncodeResult{
-        String formattedAddress;
-        Double lat;
-        Double lon;
-
-        GoogleGeoEncodeResult(String formattedAddress, Double lat,Double lon){
-            this.formattedAddress = formattedAddress;
-            this.lat = lat;
-            this.lon = lon;
-        }
-    }
-
-    private class GoogleFormattedAddress{
-        String street;
-        String city;
-        String state;
-        String zip;
-        String country;
-
-        GoogleFormattedAddress(String street,String city,String state, String zip, String country){
-            this.street = street;
-            this.city = city;
-            this.state = state;
-            this.zip = zip;
-            this.country = country;
-        }
-    }
 
     public void createUniqueCSV(){
 
