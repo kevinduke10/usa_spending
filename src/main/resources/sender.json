@@ -1,0 +1,59 @@
+{
+  "index_patterns": [
+    "sender"
+  ],
+  "mappings": {
+    "_doc": {
+      "properties": {
+        "parentAwardAgencyName": {
+          "type": "keyword"
+        },
+
+        "awardingAgencyName": {
+          "type": "keyword"
+        },
+        "awardingOfficeName": {
+          "type": "keyword"
+        },
+        "fundingAgencyName": {
+          "type": "keyword"
+        },
+
+        "recipientName": {
+          "type": "keyword"
+        },
+        "recipientParentName": {
+          "type": "keyword"
+        },
+        "recipientStateName": {
+          "type": "keyword"
+        },
+
+        "totalDollarsObligated": {
+          "type": "double"
+        },
+
+        "actionDate": {
+          "type": "date"
+        },
+        "location": {
+          "type": "geo_point",
+          "fields": {
+            "tectonix": {
+              "type": "tectonix"
+            }
+          }
+        }
+      }
+    }
+  },
+  "settings": {
+    "index": {
+      "number_of_shards": "4",
+      "number_of_replicas": "0",
+      "sort": {
+        "field": "location.tectonix"
+      }
+    }
+  }
+}

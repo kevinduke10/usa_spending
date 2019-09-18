@@ -386,4 +386,144 @@ public class MoneyLine {
     public void setIndex(Integer idx){
         this.index = idx;
     }
+
+    public String getAwardIdPiid() {
+        return awardIdPiid;
+    }
+
+    public String getTransactionNumber() {
+        return transactionNumber;
+    }
+
+    public String getParentAwardAgencyId() {
+        return parentAwardAgencyId;
+    }
+
+    public String getParentAwardAgencyName() {
+        return parentAwardAgencyName;
+    }
+
+    public String getTotalDollarsObligated() {
+        return totalDollarsObligated;
+    }
+
+    public String getBaseAndExercisedOptionsValue() {
+        return baseAndExercisedOptionsValue;
+    }
+
+    public String getCurrentTotalValueOfAward() {
+        return currentTotalValueOfAward;
+    }
+
+    public String getBaseAndAllOptionsValue() {
+        return baseAndAllOptionsValue;
+    }
+
+    public String getPotentialTotalValueOfAward() {
+        return potentialTotalValueOfAward;
+    }
+
+    public String getActionDate() {
+        return actionDate;
+    }
+
+    public String getPeriodOfPerformanceStartDate() {
+        return periodOfPerformanceStartDate;
+    }
+
+    public String getPeriodOfPerformanceCurrentEndDate() {
+        return periodOfPerformanceCurrentEndDate;
+    }
+
+    public String getPeriodOfPerformancePotentialEndDate() {
+        return periodOfPerformancePotentialEndDate;
+    }
+
+    public String getAwardingAgencyCode() {
+        return awardingAgencyCode;
+    }
+
+    public String getAwardingAgencyName() {
+        return awardingAgencyName;
+    }
+
+    public String getAwardingSubAgencyCode() {
+        return awardingSubAgencyCode;
+    }
+
+    public String getAwardingSubAgencyName() {
+        return awardingSubAgencyName;
+    }
+
+    public String getAwardingOfficeCode() {
+        return awardingOfficeCode;
+    }
+
+    public String getAwardingOfficeName() {
+        return awardingOfficeName;
+    }
+
+    public String getFundingAgencyCode() {
+        return fundingAgencyCode;
+    }
+
+    public String getFundingAgencyName() {
+        return fundingAgencyName;
+    }
+
+    public String getForeignFunding() {
+        return foreignFunding;
+    }
+
+    public String getForeignFundingDescription() {
+        return foreignFundingDescription;
+    }
+
+    public String getRecipientDUNS() {
+        return recipientDUNS;
+    }
+
+    public String getRecipientName() {
+        return recipientName;
+    }
+
+    public String getRecipientDoingBusinessAsName() {
+        return recipientDoingBusinessAsName;
+    }
+
+    public String getCageCode() {
+        return cageCode;
+    }
+
+    public String getRecipientParentName() {
+        return recipientParentName;
+    }
+
+    public String getRecipientCountryName() {
+        return recipientCountryName;
+    }
+
+    public String getRecipientAddressLine1() {
+        return recipientAddressLine1;
+    }
+
+    public String getRecipientAddressLine2() {
+        return recipientAddressLine2;
+    }
+
+    public String getRecipientCityName() {
+        return recipientCityName;
+    }
+
+    public String getRecipientStateName() {
+        return recipientStateName;
+    }
+
+    public String getZipWith4XtraDigits() {
+        return zipWith4XtraDigits;
+    }
+
+    public Boolean getUSAddress() {
+        return isUSAddress;
+    }
 }

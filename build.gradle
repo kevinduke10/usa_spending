@@ -31,4 +31,8 @@ dependencies {
     compile 'org.locationtech.jts:jts-core:1.15.0'
     compile 'org.json:json:20180130'
 
+    compile "org.elasticsearch:elasticsearch:7.2.0"
+    compile "org.elasticsearch.client:elasticsearch-rest-high-level-client:7.2.0"
+    compile "org.elasticsearch.client:elasticsearch-rest-client:7.2.0"
+
 }

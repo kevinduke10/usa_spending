@@ -4,17 +4,28 @@ import com.tectonix.usaspending.domain.EncodedAgency;
 import com.tectonix.usaspending.domain.EncodedLine;
 import com.tectonix.usaspending.domain.MoneyLine;
 import com.tectonix.usaspending.utils.SpendingUtils;
-import org.locationtech.jts.util.Stopwatch;
+import org.apache.http.HttpHost;
+import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.mapper.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Stream;
 
 /*
     "Filtered" contains csv with address rows with the correct length of array after a split on ","
@@ -31,9 +42,20 @@ public class TectonixIngest {
     @Value("${fromComputeDir}")
     String encodedDir;
 
+    @Value("classpath:resources/recipient.json")
+    File recipientJson;
+
+    @Value("classpath:resources/sender.json")
+    File senderJson;
+
+    private final RestHighLevelClient client  = new RestHighLevelClient(RestClient.builder(new HttpHost("localhost", 9200)));
+
     List<EncodedAgency> encodedAgencies = new ArrayList<>();
 
     Map<Integer,EncodedLine> encodedMap = new TreeMap<>();
+
+    private BulkRequest bulkRequest = new BulkRequest();
+    private final int bulkSize = 1000;
 
     public void ingest() {
         File uniqueSenderFile = new File(dataDir + "/unique/encoded.csv");
@@ -83,6 +105,14 @@ public class TectonixIngest {
     }
 
     private void populateTectonixIndex(File filteredFileToIngest){
+        try {
+            tryToCreateTemplate("sender");
+            //tryToCreateTemplate("recipient");
+        }catch(Exception e){
+            e.printStackTrace();
+            return;
+        }
+
         try (BufferedReader br = new BufferedReader(new FileReader(filteredFileToIngest))) {
             int idx = 0;
             String line;
@@ -94,20 +124,90 @@ public class TectonixIngest {
                         System.out.println("Original Address: " + ml.getAddress());
                         System.out.println("ENCODED: " + encodedLine.getResultAddress());
                         System.out.println("-------------");
+
+                        IndexRequest request = new IndexRequest("sender")
+                                .source(getRelevantSenderFields(ml,encodedLine), XContentType.JSON);
+                        bulkRequest.add(request);
                     }else{
                         System.out.println("failed");
                     }
                 }
+                if(bulkRequest.numberOfActions() == bulkSize) {
+                    submitBulk();
+                }
                 idx++;
+            }
+            if(bulkRequest.numberOfActions() > 0){
+                submitBulk();
             }
         }catch (Exception e){
             e.printStackTrace();
         }
     }
 
-    //TODO: Up next is to create the mappings for Tectonix.
-    private void createMappings(){
+    @SuppressWarnings("unchecked")
+    void tryToCreateTemplate(String name) throws IOException {
+        if(true){
+            System.out.println("Template doesn't exist, adding");
+            File mappingFile = new File(name + ".json");
+            boolean ack = this.client.indices().putTemplate(
+                    new PutIndexTemplateRequest(name).source(readLineByLine(name + ".json"), XContentType.JSON), RequestOptions.DEFAULT).isAcknowledged();
 
+            if(ack){
+                System.out.println("Template pushed successfully");
+            }else {
+                System.out.println("Template push failed");
+            }
+        }else{
+            System.out.println("Template already exists for " + name);
+        }
+    }
+
+    private void submitBulk() {
+        while(true) {
+            try {
+                BulkResponse response = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+                bulkRequest = new BulkRequest();
+                return;
+            } catch (IOException e) {
+                try {
+                    e.printStackTrace();
+                    Thread.sleep(2000);
+                } catch (InterruptedException intEx){
+                    intEx.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public Map<String, Object> getRelevantSenderFields(MoneyLine ml, EncodedLine el){
+        Map<String, Object> out = new HashMap<>();
+
+        out.put("parentAwardAgencyName", ml.getParentAwardAgencyName());
+        out.put("awardingAgencyName", ml.getAwardingAgencyName());
+        out.put("awardingOfficeName", ml.getAwardingOfficeName());
+        out.put("fundingAgencyName", ml.getFundingAgencyName());
+        out.put("recipientName", ml.getRecipientName());
+        out.put("recipientParentName", ml.getRecipientParentName());
+        out.put("recipientStateName", ml.getRecipientStateName());
+        out.put("totalDollarsObligated", ml.getTotalDollarsObligated());
+        out.put("actionDate", ml.getActionDate());
+
+        out.put("location", el.getLat() + "," + el.getLon());
+
+        return out;
+    }
+
+    private static String readLineByLine(String filePath) {
+        Resource resource = new ClassPathResource(filePath);
+        StringBuilder contentBuilder = new StringBuilder();
+        try (Stream<String> stream = Files.lines( Paths.get(resource.getFile().getAbsolutePath()), StandardCharsets.UTF_8)) {
+            stream.forEach(s -> contentBuilder.append(s).append("\n"));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        return contentBuilder.toString();
     }
 }
 
